@@ -1,7 +1,7 @@
-from PetTechLibrary import closeDoor, openDoor,getWeight,initComponents,connectWifi
+from PetTechLibrary import *
 
-if connectWifi():
-    
+
+if connectWifi():   
     initComponents()#inicialicamos componentes
     while True:
             weight = getWeight() # leo 10 veces para ser más precisos      
@@ -9,5 +9,4 @@ if connectWifi():
                 closeDoor(weight)
             else:#Si el valor es 0 abre la compuerta
                 openDoor(weight)
-    
-    
+

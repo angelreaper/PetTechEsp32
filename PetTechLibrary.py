@@ -3,7 +3,9 @@ from machine import Pin, ADC, PWM, I2C
 from ssd1306 import SSD1306_I2C
 from utime import sleep, sleep_ms
 import network, time
-
+import ujson
+import ufirebase as firebase
+import utime
 global miRed
 #parametros galga
 scaleCalibration = 978.9762# Albert # valor referencia un celular de 220 gramos usando la función calibrate peso Albert
@@ -130,3 +132,43 @@ def connectWifi():
       print("Conexión Exitosa!")
       print('Datos de la red (IP/netmask/gw/DNS):', miRed.ifconfig())
       return True
+
+def GetConsumos():
+     firebase.setURL('https://pettechesp32-default-rtdb.firebaseio.com/')
+     firebase.get("/Consumos/","dato",bg=0)
+     return firebase.dato
+def GetPrametroPeso():
+     firebase.setURL('https://pettechesp32-default-rtdb.firebaseio.com/')
+     firebase.get("/ParametrosPeso/","dato",bg=0)
+     return firebase.dato
+def GetRangosPesos():
+     firebase.setURL('https://pettechesp32-default-rtdb.firebaseio.com/')
+     firebase.get("/RangosPesos/","dato",bg=0)
+     return firebase.dato
+def GetActualDate():
+    # Obtener el tiempo Unix en segundos
+    tiempo_unix = utime.time()
+
+    # Convertir el tiempo Unix a una tupla de tiempo local
+    tiempo_local = utime.localtime(tiempo_unix)
+
+    # Obtener el día, mes y año del tiempo local
+    dia_actual = tiempo_local[2]
+    mes_actual = tiempo_local[1]
+    anio_actual = tiempo_local[0]
+    date = (f"{dia_actual:02d}/{mes_actual:02d}/{anio_actual}")
+    return date
+def GetActualTime():
+    # Obtener el tiempo Unix en segundos
+    tiempo_unix = utime.time()
+
+    # Convertir el tiempo Unix a una tupla de tiempo local
+    tiempo_local = utime.localtime(tiempo_unix)
+
+    # Obtener la hora, minutos y segundos del tiempo local
+    hora_actual = tiempo_local[3]
+    minutos_actual = tiempo_local[4]
+    hora = (f"{hora_actual:02d}:{minutos_actual:02d}")
+    return hora
+
+    
