@@ -7,6 +7,7 @@ import ujson
 import ufirebase as firebase
 import utime
 global miRed
+urlFireBase='https://pettechesp32-default-rtdb.firebaseio.com/'
 #parametros galga
 scaleCalibration = 978.9762# Albert # valor referencia un celular de 220 gramos usando la función calibrate peso Albert
 #scaleCalibration = 1448.194 # Kevin
@@ -134,15 +135,15 @@ def connectWifi():
       return True
 
 def GetConsumos():
-     firebase.setURL('https://pettechesp32-default-rtdb.firebaseio.com/')
+     firebase.setURL(urlFireBase)
      firebase.get("/Consumos/","dato",bg=0)
      return firebase.dato
 def GetPrametroPeso():
-     firebase.setURL('https://pettechesp32-default-rtdb.firebaseio.com/')
+     firebase.setURL(urlFireBase)
      firebase.get("/ParametrosPeso/","dato",bg=0)
      return firebase.dato
 def GetRangosPesos():
-     firebase.setURL('https://pettechesp32-default-rtdb.firebaseio.com/')
+     firebase.setURL(urlFireBase)
      firebase.get("/RangosPesos/","dato",bg=0)
      return firebase.dato
 def GetActualDate():
@@ -171,13 +172,14 @@ def GetActualTime():
     hora = (f"{hora_actual:02d}:{minutos_actual:02d}")
     return hora
 
-def CalculaRacion():
+def CalculateRation():
     parametroPeso= GetPrametroPeso()#esto devuelve un diccionario
     peso_kg = parametroPeso["PesoKg"]
-    racion = parametroPeso["Racion"]
+    #racion = parametroPeso["Racion"]
     total_consumo_diario = parametroPeso["TotalConsumoDiario"]
     cantidad_raciones = parametroPeso["CantidadRaciones"]
-    print(peso_kg,racion,total_consumo_diario,cantidad_raciones)
+    intervalo_horas = parametroPeso["IntervaloHoras"]
+    print(peso_kg,total_consumo_diario,cantidad_raciones)
     parametroRango=GetRangosPesos()#esto devuelve un diccionario
     #print(parametroRango)
     #print(type(parametroRango))
@@ -185,20 +187,42 @@ def CalculaRacion():
     data_ordenado = dict(sorted(parametroRango.items()))#ordeno el diccionario
     #Iterar a través del diccionario e imprimir los valores
     for rango, detalles in data_ordenado.items():#busco en que rango esta el peso que ingresaron
-        if valor_en_rango(parametroPeso["PesoKg"],detalles["Rango-Peso"]):#si el peso esta en alguno de los rangos
+        if value_in_range(parametroPeso["PesoKg"],detalles["Rango-Peso"]):#si el peso esta en alguno de los rangos
             print("El peso" , parametroPeso["PesoKg"] , "Esta dentro del rango ",detalles["Rango-Peso"])
-            if valor_en_rango(parametroPeso["TotalConsumoDiario"],detalles["Rango-Racion"]):#valido la cantidad si esta dentro del rango encontrado
+            if value_in_range(parametroPeso["TotalConsumoDiario"],detalles["Rango-Racion"]):#valido la cantidad si esta dentro del rango encontrado
                 print("La ración Total" , parametroPeso["TotalConsumoDiario"] , "Esta dentro del rango ",detalles["Rango-Racion"])
                 break
-   
-    peso=float(parametroPeso["TotalConsumoDiario"])
-    cantidadRaciones = float(parametroPeso["CantidadRaciones"])
-    calculoRacion = peso/cantidadRaciones
+    calculoRacion = float(peso_kg)/float(cantidad_raciones)
     print("Calculo de Ración ", calculoRacion)
-
-def valor_en_rango(valor, rango_str):
+    CreatePlan(intervalo_horas,calculoRacion,cantidad_raciones)#creamos el plan
+#Evalua si el valor esta dentro del rango
+def value_in_range(valor, rango_str):
     # Dividir el rango en dos valores mediante el guion "-"
     inicio, fin = map(float, rango_str.split('-'))
     # Verificar si el valor está dentro del rango
     return inicio <= float(valor) <= fin
-    
+#Crea el plan
+def CreatePlan(hourInterval,ration,quantityRation):
+    # Obtener el tiempo Unix en segundos
+    tiempo_unix = utime.time()
+
+    # Convertir el tiempo Unix a una tupla de tiempo local
+    tiempo_local = utime.localtime(tiempo_unix)
+
+    # Obtener la hora, minutos y segundos del tiempo local
+    hora_actual = tiempo_local[3]
+    minutos_actual = tiempo_local[4]
+    # Obtener el día, mes y año del tiempo local
+    dia_actual = tiempo_local[2]
+    mes_actual = tiempo_local[1]
+    anio_actual = tiempo_local[0]
+    firebase.setURL(urlFireBase)
+    currentHour = hora_actual#que traiga la hora 
+    for i in range(quantityRation):
+         message = {"Fecha": (f"{dia_actual:02d}/{mes_actual:02d}/{anio_actual}"),"Hora":(f"{currentHour:02d}:{minutos_actual:02d}"),"Racion":(f"{ration:1f}")}
+         print("Mensaje",message,"Dato para crear","/Consumos/Consumo"+str(i))
+         firebase.put("/Consumos/Consumo"+str(i+1),message,bg=0)
+         currentHour += hourInterval#sumo el intervalo
+         if currentHour > 23:
+            currentHour -= 24
+            dia_actual +=1

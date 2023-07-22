@@ -2,7 +2,7 @@ from PetTechLibrary import *
 
 
 if connectWifi():
-    CalculaRacion()
+    CalculateRation()
     '''
     initComponents()#inicialicamos componentes
     while True:
