@@ -94,13 +94,13 @@ def getWeight():
 #Funcion que cierra la puerta
 def closeDoor(weight):
     print("Compuerta Cerrada")
-    print("Peso: {:.2f}".format(weight),"gr.")
+    print("Peso: {:.1f}".format(weight),"gr.")
     servo.duty(map_servo(closeServo))#cierra
     #showOledWeight("Peso:{:.2f}".format(weight),"Cerrada...")
 #Función que abre la puerta   
 def openDoor(weight):
     servo.duty(map_servo(openServo))#abre 
-    print("Peso: {:.2f}".format(weight),"gr.")
+    print("Peso: {:.1f}".format(weight),"gr.")
     print("Compuerta Abierta")
     #showOledWeight("Peso:{:.2f}".format(weight),"Abierta...")
 
@@ -171,4 +171,34 @@ def GetActualTime():
     hora = (f"{hora_actual:02d}:{minutos_actual:02d}")
     return hora
 
+def CalculaRacion():
+    parametroPeso= GetPrametroPeso()#esto devuelve un diccionario
+    peso_kg = parametroPeso["PesoKg"]
+    racion = parametroPeso["Racion"]
+    total_consumo_diario = parametroPeso["TotalConsumoDiario"]
+    cantidad_raciones = parametroPeso["CantidadRaciones"]
+    print(peso_kg,racion,total_consumo_diario,cantidad_raciones)
+    parametroRango=GetRangosPesos()#esto devuelve un diccionario
+    #print(parametroRango)
+    #print(type(parametroRango))
+    #Leo los parametros
+    data_ordenado = dict(sorted(parametroRango.items()))#ordeno el diccionario
+    #Iterar a través del diccionario e imprimir los valores
+    for rango, detalles in data_ordenado.items():#busco en que rango esta el peso que ingresaron
+        if valor_en_rango(parametroPeso["PesoKg"],detalles["Rango-Peso"]):#si el peso esta en alguno de los rangos
+            print("El peso" , parametroPeso["PesoKg"] , "Esta dentro del rango ",detalles["Rango-Peso"])
+            if valor_en_rango(parametroPeso["TotalConsumoDiario"],detalles["Rango-Racion"]):#valido la cantidad si esta dentro del rango encontrado
+                print("La ración Total" , parametroPeso["TotalConsumoDiario"] , "Esta dentro del rango ",detalles["Rango-Racion"])
+                break
+   
+    peso=float(parametroPeso["TotalConsumoDiario"])
+    cantidadRaciones = float(parametroPeso["CantidadRaciones"])
+    calculoRacion = peso/cantidadRaciones
+    print("Calculo de Ración ", calculoRacion)
+
+def valor_en_rango(valor, rango_str):
+    # Dividir el rango en dos valores mediante el guion "-"
+    inicio, fin = map(float, rango_str.split('-'))
+    # Verificar si el valor está dentro del rango
+    return inicio <= float(valor) <= fin
     
