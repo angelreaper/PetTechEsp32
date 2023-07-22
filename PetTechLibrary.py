@@ -56,6 +56,8 @@ def initComponents():
     print("Sistema Ok")
     servo.duty(map_servo(closeServo))#cierra
     sleep(5)
+    CalculateRation()
+    sleep(5)
     
 #Funcion para calibrar solo se usa una vez y se obtiene el valor para la variable scaleCalibration
 def calibrate(scale):
@@ -179,7 +181,7 @@ def CalculateRation():
     total_consumo_diario = parametroPeso["TotalConsumoDiario"]
     cantidad_raciones = parametroPeso["CantidadRaciones"]
     intervalo_horas = parametroPeso["IntervaloHoras"]
-    print(peso_kg,total_consumo_diario,cantidad_raciones)
+    #print(peso_kg,total_consumo_diario,cantidad_raciones)
     parametroRango=GetRangosPesos()#esto devuelve un diccionario
     #print(parametroRango)
     #print(type(parametroRango))
@@ -192,7 +194,7 @@ def CalculateRation():
             if value_in_range(parametroPeso["TotalConsumoDiario"],detalles["Rango-Racion"]):#valido la cantidad si esta dentro del rango encontrado
                 print("La ración Total" , parametroPeso["TotalConsumoDiario"] , "Esta dentro del rango ",detalles["Rango-Racion"])
                 break
-    calculoRacion = float(peso_kg)/float(cantidad_raciones)
+    calculoRacion = round(float(total_consumo_diario)/float(cantidad_raciones),1)
     print("Calculo de Ración ", calculoRacion)
     CreatePlan(intervalo_horas,calculoRacion,cantidad_raciones)#creamos el plan
 #Evalua si el valor esta dentro del rango
@@ -203,6 +205,8 @@ def value_in_range(valor, rango_str):
     return inicio <= float(valor) <= fin
 #Crea el plan
 def CreatePlan(hourInterval,ration,quantityRation):
+    print("Generando Plan...")
+    firebase.delete("/Consumos/",bg=0)
     # Obtener el tiempo Unix en segundos
     tiempo_unix = utime.time()
 
@@ -219,10 +223,11 @@ def CreatePlan(hourInterval,ration,quantityRation):
     firebase.setURL(urlFireBase)
     currentHour = hora_actual#que traiga la hora 
     for i in range(quantityRation):
-         message = {"Fecha": (f"{dia_actual:02d}/{mes_actual:02d}/{anio_actual}"),"Hora":(f"{currentHour:02d}:{minutos_actual:02d}"),"Racion":(f"{ration:1f}")}
-         print("Mensaje",message,"Dato para crear","/Consumos/Consumo"+str(i))
+         message = {"Fecha": (f"{dia_actual:02d}/{mes_actual:02d}/{anio_actual}"),"Hora":(f"{currentHour:02d}:{minutos_actual:02d}"),"Racion":str(ration)}
+         #print("Mensaje",message,"Dato para crear","/Consumos/Consumo"+str(i))
          firebase.put("/Consumos/Consumo"+str(i+1),message,bg=0)
          currentHour += hourInterval#sumo el intervalo
          if currentHour > 23:
             currentHour -= 24
             dia_actual +=1
+    print("Plan Generado Correctamente...")

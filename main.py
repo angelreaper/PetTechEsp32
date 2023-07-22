@@ -2,8 +2,8 @@ from PetTechLibrary import *
 
 
 if connectWifi():
-    CalculateRation()
-    '''
+   
+  
     initComponents()#inicialicamos componentes
     while True:
             weight = getWeight() # leo 10 veces para ser más precisos      
@@ -12,5 +12,5 @@ if connectWifi():
             else:#Si el valor es 0 abre la compuerta
                 openDoor(weight)
 
-'''
+
 
