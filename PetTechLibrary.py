@@ -1,7 +1,10 @@
 from hx711 import HX711
 from machine import Pin, ADC, PWM, I2C
 from ssd1306 import SSD1306_I2C
-from time import sleep, sleep_ms
+from utime import sleep, sleep_ms
+import network, time
+
+global miRed
 #parametros galga
 scaleCalibration = 978.9762# Albert # valor referencia un celular de 220 gramos usando la función calibrate peso Albert
 #scaleCalibration = 1448.194 # Kevin
@@ -23,6 +26,8 @@ servo= PWM(Pin(servoPin), freq = freq)
 #oled
 #i2c=I2C(0, scl=Pin(22), sda=Pin(21))
 #oled = SSD1306_I2C(ancho, alto, i2c)
+nameNetWork = "CLARO-6184"
+password= "Cl4r0@926184"
 
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Funciones manejo de funcionalidad>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -81,7 +86,8 @@ def map_servo(x):
         return int((x - 0) * (125 - 25) / (180 - 0) + 25)
 #Función que lee el peso
 def getWeight():
-    return round(scale.get_units(10),2)#
+    sleep(2)
+    return round(scale.get_units(10),2)
 
 #Funcion que cierra la puerta
 def closeDoor(weight):
@@ -108,4 +114,19 @@ def showOledWeight(text,action):
     oled.text(action, 0, 30, 1)#abierto o cerrado
     oled.text(text, 0, 40, 1)
     oled.show()
-    
+#conexion a Wifi
+def connectWifi():
+      miRed = network.WLAN(network.STA_IF)     
+      if not miRed.isconnected():              #Si no está conectado…
+          miRed.active(True)                   #activa la interface
+          miRed.connect(nameNetWork, password)         #Intenta conectar con la red
+          print('Conectando a la red', nameNetWork +"…")
+          timeout = time.time ()
+          while not miRed.isconnected():           #Mientras no se conecte..
+              if (time.ticks_diff (time.time (), timeout) > 10):
+                  print ("Imposible conectar")
+                  miRed.active(False)
+                  return False
+      print("Conexión Exitosa!")
+      print('Datos de la red (IP/netmask/gw/DNS):', miRed.ifconfig())
+      return True
