@@ -6,8 +6,10 @@ import network, time
 import ujson
 import ufirebase as firebase
 import utime
+import umail
 global miRed
 urlFireBase='https://pettechesp32-default-rtdb.firebaseio.com/'
+import umail
 #parametros galga
 scaleCalibration = 978.9762# Albert # valor referencia un celular de 220 gramos usando la función calibrate peso Albert
 #scaleCalibration = 1448.194 # Kevin
@@ -29,8 +31,8 @@ servo= PWM(Pin(servoPin), freq = freq)
 #oled
 #i2c=I2C(0, scl=Pin(22), sda=Pin(21))
 #oled = SSD1306_I2C(ancho, alto, i2c)
-nameNetWork = ""
-password= ""
+nameNetWork = "Torre 3 Apto 1108"
+password= "89042066380"
 
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Funciones manejo de funcionalidad>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -264,6 +266,7 @@ def Dispense():
                           openDoor(weight)
                           #sleep(1)
                   print("Ya se lleno")
+                  senDemail(weight,fechaActual,horaActualActual)
                   closeDoor(weight)#cierro cuando ya este lleno
                   estaVacio=False
                   sleep(5)
@@ -282,3 +285,28 @@ def buscarEnPlan(datos,hora_buscada,fecha_buscada):
             valorDispesar = data['Racion'] 
             break
     return encontrado,float(valorDispesar)
+def senDemail(gramosDispensados,Fecha,Hora):
+    # Email details
+    sender_email = 'pettech14@gmail.com'
+    sender_name = 'PetTech Notificación' #sender name
+    sender_app_password = 'kqabbxwlthtbunep'#clave de aplicación
+    recipient_email ='albertloz20@gmail.com' #correo a donde se envia la notificación
+    email_subject ='Notificación de Dispensación'
+    print("inicio envio")
+    mailStruct = f'''
+                Fecha: {Fecha}
+                Hora: {Hora}
+                Gramos Dispensados: {gramosDispensados}
+                '''
+    # Send the email
+    smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True) # Gmail's SSL port
+    smtp.login(sender_email, sender_app_password)
+    smtp.to(recipient_email)
+    smtp.write("From:" + sender_name + "<"+ sender_email+">\n")
+    smtp.write("Subject:" + email_subject + "\n")
+    smtp.write(mailStruct)
+    smtp.send()
+    smtp.quit()
+    print("enviado")
+    
+    
