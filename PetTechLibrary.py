@@ -29,13 +29,14 @@ servo= PWM(Pin(servoPin), freq = freq)
 #oled
 #i2c=I2C(0, scl=Pin(22), sda=Pin(21))
 #oled = SSD1306_I2C(ancho, alto, i2c)
-nameNetWork = "CLARO-6184"
-password= "Cl4r0@926184"
+nameNetWork = ""
+password= ""
 
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Funciones manejo de funcionalidad>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #Funcion de inicialización de componentes   
-def initComponents():    
+def initComponents():
+    print("No coloque peso")
     #print(i2c.scan(), "conectada")
     print("Iniciando, retire el peso...")    
     #oled.vline(0, 0, 20, 1)
@@ -61,7 +62,6 @@ def initComponents():
     
 #Funcion para calibrar solo se usa una vez y se obtiene el valor para la variable scaleCalibration
 def calibrate(scale):
-    print("No coloque peso")
     scale.read()#inicio el comando 
     scale.set_scale(1)# seteo scala en 1
     #sleep(5) 
@@ -231,3 +231,54 @@ def CreatePlan(hourInterval,ration,quantityRation):
             currentHour -= 24
             dia_actual +=1
     print("Plan Generado Correctamente...")
+#Armo la consulta de dispensación
+def Dispense():
+    #horaActualActual="15:43"#para probar
+    #fechaActual = "23/07/2023"#para probar
+    horaActualActual=GetActualTime()
+    fechaActual=GetActualDate()
+    #Saco el plan
+    consumos = GetConsumos()#Obtengo consumos
+    data_ordenado = dict(sorted(consumos.items()))#ordeno el diccionario
+    #print(data_ordenado)
+    encontrado, valorDispensar = buscarEnPlan(data_ordenado,horaActualActual,fechaActual)
+    #print(encontrado,valorDispensar)
+    if encontrado:#Si encontre a hora dentro del plan
+        print("La hora y fecha actual se encuentran en el plan")
+        estaVacio= True
+        while estaVacio:
+              weight = getWeight()
+              print("peso vs valor a dispensar",weight,valorDispensar,weight == valorDispensar)
+              print("diferencia:",abs(weight-valorDispensar))
+              if round(weight,1) >= round(1,1):# si la balanza esta llena
+                    print("Hay comida",weight,"gr.")
+                    closeDoor(weight)
+                    sleep(5)
+                    estaVacio=False
+              else:#esta en menos de un gramo
+                  print("No hay comida",weight,"gr.")
+                  print("Incio Dispensación")
+                  while weight <= valorDispensar:
+                          weight = getWeight()
+                          print("No esta lleno todavía",weight,"gr.")
+                          openDoor(weight)
+                          #sleep(1)
+                  print("Ya se lleno")
+                  closeDoor(weight)#cierro cuando ya este lleno
+                  estaVacio=False
+                  sleep(5)
+    else:
+        print("La hora y fecha Actual no se encuentran en el plan")
+    print("Fin dispensación")       
+    
+def buscarEnPlan(datos,hora_buscada,fecha_buscada):
+# Bucle para buscar el dato
+    encontrado=False
+    valorDispesar= 0.0
+    for key, data in datos.items():
+        #print("Hora Dato",data['Hora'],"Fecha Dato",data['Fecha'])
+        if data['Hora'] == hora_buscada and data['Fecha'] == fecha_buscada:
+            encontrado = True
+            valorDispesar = data['Racion'] 
+            break
+    return encontrado,float(valorDispesar)
