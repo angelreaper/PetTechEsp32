@@ -31,8 +31,8 @@ servo= PWM(Pin(servoPin), freq = freq)
 #oled
 #i2c=I2C(0, scl=Pin(22), sda=Pin(21))
 #oled = SSD1306_I2C(ancho, alto, i2c)
-nameNetWork = "Torre 3 Apto 1108"
-password= "89042066380"
+nameNetWork = ""
+password= ""
 
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Funciones manejo de funcionalidad>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -266,8 +266,8 @@ def Dispense():
                           openDoor(weight)
                           #sleep(1)
                   print("Ya se lleno")
-                  senDemail(weight,fechaActual,horaActualActual)
                   closeDoor(weight)#cierro cuando ya este lleno
+                  senDemail(weight,fechaActual,horaActualActual)
                   estaVacio=False
                   sleep(5)
     else:
